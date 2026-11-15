@@ -1,3 +1,4 @@
+*.csproj.user
 # Visual Studio
 .vs
 .user

@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/FlowOps.API/FlowOps.API.csproj" Id="a024cd7a-d443-4aaa-8f16-6f0d73e9d05f" />
     <Project Path="src/FlowOps.Application/FlowOps.Application.csproj" />
     <Project Path="src/FlowOps.Domain/FlowOps.Domain.csproj" />
+    <Project Path="src/FlowOps.Infrastructure/FlowOps.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/" />
 </Solution>
