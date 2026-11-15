@@ -1,0 +1,25 @@
+# Visual Studio
+.vs
+.user
+.suo
+
+# .NET
+bin
+obj
+TestResults
+
+# Angular  Node.js
+node_modules
+dist
+.angular
+
+# Local configuration and secrets
+.env
+.env.
+!.env.example
+appsettings.Development.local.json
+
+# IDE  OS
+.idea
+.DS_Store
+Thumbs.db
