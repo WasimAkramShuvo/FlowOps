@@ -41,7 +41,7 @@ public class FlowOpsDbContext : DbContext
             .IsRequired();
 
             entity.Property(x => x.UpdatedAt)
-            .IsRequired();
+            .IsRequired(false);
         });
     }
 }

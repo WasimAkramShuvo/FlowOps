@@ -1,4 +1,5 @@
 *.csproj.user
+*.Backup.tmp
 # Visual Studio
 .vs
 .user
