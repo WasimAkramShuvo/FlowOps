@@ -79,5 +79,24 @@ namespace FlowOps.Application.Services
             return true;
         }
 
+        public async Task<bool> DeleteAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            var workItem = await _repository.GetByIdAsync(
+                id,
+                cancellationToken);
+
+            if (workItem is null)
+                return false;
+
+            _repository.Delete(workItem);
+
+            await _repository.SaveChangesAsync(
+                cancellationToken);
+
+            return true;
+        }
+
     }
 }

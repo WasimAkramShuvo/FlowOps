@@ -285,6 +285,88 @@ namespace FlowOps.Application.Tests.Services
                 Times.Never);
         }
 
+        [Fact]
+        public async Task DeleteAsync_Should_Delete_WorkItem_When_Found()
+        {
+            // Arrange
+            var repositoryMock = new Mock<IWorkItemRepository>();
 
+            var workItem = new WorkItem(
+                "Delete testing",
+                "Testing DeleteAsync method",
+                WorkItemPriority.Medium);
+
+            repositoryMock
+                .Setup(repo => repo.GetByIdAsync(
+                    workItem.Id,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(workItem);
+
+            repositoryMock
+                .Setup(repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+
+            var service = new WorkItemService(repositoryMock.Object);
+
+            // Act
+            var result = await service.DeleteAsync(workItem.Id);
+
+            // Assert
+            Assert.True(result);
+
+            repositoryMock.Verify(
+                repo => repo.GetByIdAsync(
+                    workItem.Id,
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            repositoryMock.Verify(
+                repo => repo.Delete(workItem),
+                Times.Once);
+
+            repositoryMock.Verify(
+                repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_Should_Return_False_When_Not_Found()
+        {
+            // Arrange
+            var repositoryMock = new Mock<IWorkItemRepository>();
+
+            var workItemId = Guid.NewGuid();
+
+            repositoryMock
+                .Setup(repo => repo.GetByIdAsync(
+                    workItemId,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((WorkItem?)null);
+
+            var service = new WorkItemService(repositoryMock.Object);
+
+            // Act
+            var result = await service.DeleteAsync(workItemId);
+
+            // Assert
+            Assert.False(result);
+
+            repositoryMock.Verify(
+                repo => repo.GetByIdAsync(
+                    workItemId,
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            repositoryMock.Verify(
+                repo => repo.Delete(It.IsAny<WorkItem>()),
+                Times.Never);
+
+            repositoryMock.Verify(
+                repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
     }
 }
