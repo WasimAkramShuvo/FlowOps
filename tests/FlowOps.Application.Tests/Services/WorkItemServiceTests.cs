@@ -206,5 +206,85 @@ namespace FlowOps.Application.Tests.Services
                     It.IsAny<CancellationToken>()),
                 Times.Never);
         }
+
+        [Fact]
+        public async Task ChangeStatusAsync_Should_Update_Status_When_Found()
+        {
+            // Arrange
+            var repositoryMock = new Mock<IWorkItemRepository>();
+
+            var workItem = new WorkItem(
+                "Implement status testing",
+                "Test ChangeStatusAsync method",
+                WorkItemPriority.Medium);
+
+            repositoryMock
+                .Setup(repo => repo.GetByIdAsync(
+                    workItem.Id,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(workItem);
+
+            repositoryMock
+                .Setup(repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+
+            var service = new WorkItemService(repositoryMock.Object);
+
+            // Act
+            var result = await service.ChangeStatusAsync(
+                workItem.Id,
+                WorkItemStatus.InProgress);
+
+            // Assert
+            Assert.True(result);
+            Assert.Equal(WorkItemStatus.InProgress, workItem.Status);
+            Assert.NotNull(workItem.UpdatedAt);
+
+            repositoryMock.Verify(
+                repo => repo.Update(workItem),
+                Times.Once);
+
+            repositoryMock.Verify(
+                repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ChangeStatusAsync_Should_Return_False_When_Not_Found()
+        {
+            // Arrange
+            var repositoryMock = new Mock<IWorkItemRepository>();
+
+            var workItemId = Guid.NewGuid();
+
+            repositoryMock
+                .Setup(repo => repo.GetByIdAsync(
+                    workItemId,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((WorkItem?)null);
+
+            var service = new WorkItemService(repositoryMock.Object);
+
+            // Act
+            var result = await service.ChangeStatusAsync(
+                workItemId,
+                WorkItemStatus.InProgress);
+
+            // Assert
+            Assert.False(result);
+
+            repositoryMock.Verify(
+                repo => repo.Update(It.IsAny<WorkItem>()),
+                Times.Never);
+
+            repositoryMock.Verify(
+                repo => repo.SaveChangesAsync(
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+
     }
 }

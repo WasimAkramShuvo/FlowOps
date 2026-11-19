@@ -57,5 +57,27 @@ namespace FlowOps.Application.Services
 
             return true;
         }
+
+        public async Task<bool> ChangeStatusAsync(
+            Guid id,
+            WorkItemStatus status,
+            CancellationToken cancellationToken = default)
+        {
+            var workItem = await _repository.GetByIdAsync(
+                id,
+                cancellationToken);
+
+            if (workItem is null)
+                return false;
+
+            workItem.ChangeStatus(status);
+
+            _repository.Update(workItem);
+
+            await _repository.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
     }
 }
