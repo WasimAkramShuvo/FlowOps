@@ -1,3 +1,4 @@
+using FlowOps.API.ExceptionHandling;
 using FlowOps.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//Exception Handler
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // Add services to the container.
 
@@ -36,5 +41,16 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseExceptionHandler();
+
+//if (app.Environment.IsDevelopment())
+//{
+//    app.MapGet("/api/test/error", () =>
+//    {
+//        throw new InvalidOperationException(
+//            "Testing global exception handling");
+//    });
+//}
 
 app.Run();

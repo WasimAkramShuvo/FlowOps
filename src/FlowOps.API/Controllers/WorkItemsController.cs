@@ -1,7 +1,8 @@
 ﻿
+using FlowOps.Application.DTOs.WorkItems;
 using FlowOps.Application.Interfaces;
+using FlowOps.Application.Mappings;
 using FlowOps.Domain.Entities;
-using FlowOps.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlowOps.API.Controllers;
@@ -18,15 +19,18 @@ public class WorkItemsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(
+    public async Task<ActionResult<List<WorkItemResponse>>> GetAll(
         CancellationToken cancellationToken)
     {
         var items = await _repository.GetAllAsync(cancellationToken);
-        return Ok(items);
+
+        var response = items.Select(item => item.ToResponse()).ToList();
+
+        return Ok(response);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(
+    public async Task<ActionResult<WorkItemResponse>> GetById(
         Guid id,
         CancellationToken cancellationToken)
     {
@@ -35,34 +39,29 @@ public class WorkItemsController : ControllerBase
         if (item is null)
             return NotFound();
 
-        return Ok(item);
+        return Ok(item.ToResponse());
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ActionResult<WorkItemResponse>> Create(
         [FromBody] CreateWorkItemRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Title)
-            || request.Title.Length > 200
-            || (request.Description?.Length ?? 0) > 2000
-            || !Enum.IsDefined(request.Priority))
-        {
-            return BadRequest("Invalid work item data.");
-        }
-
         var item = new WorkItem(
             request.Title,
             request.Description,
             request.Priority);
 
-        await _repository.AddAsync(item, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(
+            item, cancellationToken);
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
             new { id = item.Id },
-            item);
+            item.ToResponse());
     }
 
     [HttpPut("{id:guid}")]
@@ -71,18 +70,11 @@ public class WorkItemsController : ControllerBase
         [FromBody] UpdateWorkItemRequest request,
         CancellationToken cancellationToken)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await _repository.GetByIdAsync(
+            id, cancellationToken);
 
         if (item is null)
             return NotFound();
-
-        if (string.IsNullOrWhiteSpace(request.Title)
-            || request.Title.Length > 200
-            || (request.Description?.Length ?? 0) > 2000
-            || !Enum.IsDefined(request.Priority))
-        {
-            return BadRequest("Invalid work item data.");
-        }
 
         item.Update(
             request.Title,
@@ -90,7 +82,9 @@ public class WorkItemsController : ControllerBase
             request.Priority);
 
         _repository.Update(item);
-        await _repository.SaveChangesAsync(cancellationToken);
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
 
         return NoContent();
     }
@@ -101,18 +95,18 @@ public class WorkItemsController : ControllerBase
         [FromBody] ChangeWorkItemStatusRequest request,
         CancellationToken cancellationToken)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await _repository.GetByIdAsync(
+            id, cancellationToken);
 
         if (item is null)
             return NotFound();
 
-        if (!Enum.IsDefined(request.Status))
-            return BadRequest("Invalid status.");
-
         item.ChangeStatus(request.Status);
 
         _repository.Update(item);
-        await _repository.SaveChangesAsync(cancellationToken);
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
 
         return NoContent();
     }
@@ -122,27 +116,17 @@ public class WorkItemsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var item = await _repository.GetByIdAsync(id, cancellationToken);
+        var item = await _repository.GetByIdAsync(
+            id, cancellationToken);
 
         if (item is null)
             return NotFound();
 
         _repository.Delete(item);
-        await _repository.SaveChangesAsync(cancellationToken);
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
 
         return NoContent();
     }
 }
-
-public record CreateWorkItemRequest(
-    string Title,
-    string? Description,
-    WorkItemPriority Priority);
-
-public record UpdateWorkItemRequest(
-    string Title,
-    string? Description,
-    WorkItemPriority Priority);
-
-public record ChangeWorkItemStatusRequest(
-    WorkItemStatus Status);
