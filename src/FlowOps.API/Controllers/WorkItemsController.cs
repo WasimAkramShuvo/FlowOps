@@ -1,7 +1,9 @@
 ﻿
+using FlowOps.Application.Common;
 using FlowOps.Application.DTOs.WorkItems;
 using FlowOps.Application.Interfaces;
 using FlowOps.Application.Mappings;
+using FlowOps.Application.Queries;
 using FlowOps.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,48 @@ public class WorkItemsController : ControllerBase
     public WorkItemsController(IWorkItemRepository repository)
     {
         _repository = repository;
+    }
+
+    [HttpGet("paged")]
+    [ProducesResponseType(
+    typeof(PaginatedResult<WorkItem>),
+    StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResult<WorkItem>>> GetPaged(
+    [FromQuery] WorkItemQueryParameters parameters,
+    CancellationToken cancellationToken)
+    {
+        if (parameters.PageNumber < 1)
+        {
+            return BadRequest(new
+            {
+                message = "PageNumber must be greater than zero."
+            });
+        }
+
+        if (parameters.Status.HasValue &&
+            !Enum.IsDefined(parameters.Status.Value))
+        {
+            return BadRequest(new
+            {
+                message = "Invalid status value."
+            });
+        }
+
+        if (parameters.Priority.HasValue &&
+            !Enum.IsDefined(parameters.Priority.Value))
+        {
+            return BadRequest(new
+            {
+                message = "Invalid priority value."
+            });
+        }
+
+        var result = await _repository.GetPagedAsync(
+            parameters,
+            cancellationToken);
+
+        return Ok(result);
     }
 
     [HttpGet]

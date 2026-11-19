@@ -1,4 +1,6 @@
-﻿using FlowOps.Domain.Entities;
+﻿using FlowOps.Application.Common;
+using FlowOps.Application.Queries;
+using FlowOps.Domain.Entities;
 
 namespace FlowOps.Application.Interfaces;
 
@@ -21,4 +23,8 @@ public interface IWorkItemRepository
 
     Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<PaginatedResult<WorkItem>> GetPagedAsync(
+    WorkItemQueryParameters parameters,
+    CancellationToken cancellationToken = default);
 }
